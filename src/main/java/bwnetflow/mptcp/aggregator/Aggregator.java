@@ -1,102 +1,78 @@
 package bwnetflow.mptcp.aggregator;
 
-
 import bwnetflow.messages.FlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPMessageProto;
 import bwnetflow.serdes.proto.KafkaProtobufSerde;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.log4j.Logger;
 
 import java.time.Duration;
-import java.util.Properties;
-
 
 public class Aggregator {
 
-    static Logger log = Logger.getLogger(Aggregator.class.getName());
-    static Serde<MPTCPMessageProto.MPTCPMessage> mptcpMessageSerde =
+    public static final String MPTCP_TOPIC = "mptcp-packets";
+    public static final String FLOWS_ENRICHED_TOPIC = "flows-enriched";
+    public static final String OUTPUT_TOPIC = "mptcp-flows-joined";
+
+    private final Logger log = Logger.getLogger(Aggregator.class.getName());
+
+    private final Serde<MPTCPMessageProto.MPTCPMessage> mptcpMessageSerde =
             new KafkaProtobufSerde<>(MPTCPMessageProto.MPTCPMessage.parser());
-    static Serde<FlowMessageEnrichedPb.FlowMessage> enrichedFlowsSerde =
+
+    private final Serde<FlowMessageEnrichedPb.FlowMessage> enrichedFlowsSerde =
             new KafkaProtobufSerde<>(FlowMessageEnrichedPb.FlowMessage.parser());
 
-    public static void main(String[] args) {
-        Properties properties = createProperties();
+    private final Serde<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowsSerde =
+            new KafkaProtobufSerde<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
+
+
+    public Topology createAggregatorTopology() {
         StreamsBuilder builder = new StreamsBuilder();
-        var mptcpPackets = builder.stream("mptcp-packets", Consumed.with(Serdes.String(), mptcpMessageSerde));
-        var flowsEnriched = builder.stream("flows-enriched", Consumed.with(Serdes.String(), enrichedFlowsSerde));
+        var mptcpPacketsStream = builder.stream(MPTCP_TOPIC,
+                Consumed.with(Serdes.String(), mptcpMessageSerde));
+        var flowsEnrichedStream = builder.stream(FLOWS_ENRICHED_TOPIC,
+                Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
-      /*  flowsEnriched
-                .peek((k, v) -> {
-                    System.out.println("------" + k);
-                    System.out.println(v.toString());
-                });*/
+        /*
+        KStream<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> flow =
+                mptcpPackets
+                        .outerJoin(flowsEnriched,
+                                this::createJoined,
+                                JoinWindows.of(Duration.ofSeconds(120)));
 
-    /*    mptcpPacketsToFlow(mptcpPackets)
-                .toStream()
-                .peek((k, v) -> {
-                    System.out.println("---------" + k.key());
-                    System.out.println(v.toString());
-                });*/
+        flow.peek((k,v )-> System.out.println(v.toString()))
+                .to(OUTPUT_TOPIC); // TODO topic MUST be manually created before usage
+        */
+
+        // left stream- global table join looks interesting <-- global topics only recommended for almost static data
+        // or inner kstream ktable join and delay kstream (flowsenriched) a bit ()if possible
+        // what is better regarding performance ?
+        // or left kstream kstream join with sufficient window <- Most fitting option
+        //and after joining do an aggregate/merge, to merge same keys (see case G on https://www.confluent.io/blog/crossing-streams-joins-apache-kafka/)
+
+        flowsEnrichedStream.peek((k,v) -> System.out.println(v)).to(OUTPUT_TOPIC);
 
 /*
-KStream<String, String> joined = left.outerJoin(right,
-    (leftValue, rightValue) -> "left=" + leftValue + ", right=" + rightValue, // ValueJoiner
-        JoinWindows.of(TimeUnit.MINUTES.toMillis(5)),
-                Joined.with(
-                        Serdes.String(), // key
-                        Serdes.Long(),   // left value
-                        Serdes.Double())  // right value
-  );
- */
+        flowsEnrichedStream
+                .map((k,v) -> new KeyValue<>(v.getSrcAddr().toStringUtf8(), v))
+                .leftJoin(mptcpPacketsStream,
+                        (flows, mptcp) -> MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build(),
+                        JoinWindows.of(Duration.ofSeconds(10)))
+                .peek((k,v) -> System.out.println(v))
+                .to(OUTPUT_TOPIC);
+*/
 
-    KStream<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> flow =
-            mptcpPackets
-                    .outerJoin(flowsEnriched,
-                    Aggregator::createJoined,
-                    JoinWindows.of(Duration.ofSeconds(120)));
-
-
-
-    flow.peek((k,v )-> System.out.println(v.toString()))
-            .to("joined");
-
-        KafkaStreams streams = new KafkaStreams(builder.build(), properties);
-        streams.setUncaughtExceptionHandler((thread, throwable) -> {
-            log.error("Error occurred: ", throwable);
-        });
-        streams.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+        return builder.build();
     }
 
-    private static KTable<Windowed<String>, MPTCPMessageProto.MPTCPMessage> mptcpPacketsToFlow(KStream<String,
-            MPTCPMessageProto.MPTCPMessage> packets) {
-        return packets
-                .groupBy((key, value) -> value.getSrcAddr() + /*value.getSrcPort() +*/ value.getDstAddr() /*+ value.getDstPort()*/)
-                .windowedBy(TimeWindows.of(Duration.ofSeconds(5)))
-                .aggregate(
-                        () -> MPTCPMessageProto.MPTCPMessage.newBuilder().build(),
-                        (key, value, accumulator) ->
-                             MPTCPMessageProto.MPTCPMessage
-                                .newBuilder(accumulator)
-                                .setSrcPort(value.getSrcPort())
-                                .setDstPort(value.getDstPort())
-                                .setSrcAddr(value.getSrcAddr())
-                                .setDstAddr(value.getDstAddr())
-                                .addAllMptcpOptions(value.getMptcpOptionsList())
-                                .build(),
-                        Materialized.with(Serdes.String(), mptcpMessageSerde)
-                );
-    }
-
-    private static MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage createJoined(MPTCPMessageProto.MPTCPMessage mptcpMessage,
-                                                                             FlowMessageEnrichedPb.FlowMessage flowMessage) {
-
+    private MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage createJoined(FlowMessageEnrichedPb.FlowMessage flowMessage,
+                                                                     MPTCPMessageProto.MPTCPMessage mptcpMessage) {
         log.info("CALLED joiner");
         if(mptcpMessage == null) {
             System.out.println("MPTCP message is NULL");
@@ -109,13 +85,25 @@ KStream<String, String> joined = left.outerJoin(right,
         return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build();
     }
 
-   private static Properties createProperties() {
-        Properties properties = new Properties();
-        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "mptcp-aggregator-application");
-        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass());
-        // TODO find most optimal properties
-        return properties;
+
+    private KTable<Windowed<String>, MPTCPMessageProto.MPTCPMessage> mptcpPacketsToFlow(KStream<String,
+            MPTCPMessageProto.MPTCPMessage> packets) {
+        return packets
+                .groupBy((key, value) -> value.getSrcAddr() + /*value.getSrcPort() +*/ value.getDstAddr() /*+ value.getDstPort()*/)
+                .windowedBy(TimeWindows.of(Duration.ofSeconds(5)))
+                .aggregate(
+                        () -> MPTCPMessageProto.MPTCPMessage.newBuilder().build(),
+                        (key, value, accumulator) ->
+                                MPTCPMessageProto.MPTCPMessage
+                                        .newBuilder(accumulator)
+                                        .setSrcPort(value.getSrcPort())
+                                        .setDstPort(value.getDstPort())
+                                        .setSrcAddr(value.getSrcAddr())
+                                        .setDstAddr(value.getDstAddr())
+                                        .addAllMptcpOptions(value.getMptcpOptionsList())
+                                        .build(),
+                        Materialized.with(Serdes.String(), mptcpMessageSerde)
+                );
     }
+
 }
