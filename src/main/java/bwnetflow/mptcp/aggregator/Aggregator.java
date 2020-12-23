@@ -31,6 +31,7 @@ public class Aggregator {
     private final Serde<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowsSerde =
             new KafkaProtobufSerde<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
 
+    private final FlowJoiner flowJoiner = new FlowJoiner();
 
     public Topology createAggregatorTopology() {
         StreamsBuilder builder = new StreamsBuilder();
@@ -39,71 +40,48 @@ public class Aggregator {
         var flowsEnrichedStream = builder.stream(FLOWS_ENRICHED_TOPIC,
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
-        /*
-        KStream<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> flow =
-                mptcpPackets
-                        .outerJoin(flowsEnriched,
-                                this::createJoined,
-                                JoinWindows.of(Duration.ofSeconds(120)));
 
-        flow.peek((k,v )-> System.out.println(v.toString()))
-                .to(OUTPUT_TOPIC); // TODO topic MUST be manually created before usage
-        */
+        // dedpulication: https://github.com/confluentinc/kafka-streams-examples/blob/6.0.1-post/src/test/java/io/confluent/examples/streams/EventDeduplicationLambdaIntegrationTest.java
+        // or exactly once semantics
 
-        // left stream- global table join looks interesting <-- global topics only recommended for almost static data
-        // or inner kstream ktable join and delay kstream (flowsenriched) a bit ()if possible
-        // what is better regarding performance ?
-        // or left kstream kstream join with sufficient window <- Most fitting option
-        //and after joining do an aggregate/merge, to merge same keys (see case G on https://www.confluent.io/blog/crossing-streams-joins-apache-kafka/)
+        /* Works only in rable rep: No gurantee that a client reads data as Tables
+                        .groupByKey(Grouped.with(Serdes.String(), mptcpFlowsSerde))
+                .reduce((accumulator, newValue) -> newValue.getIsMPTCPFlow() ? newValue : accumulator, // Does not work. when returned to stream representation duplicates are still there
+                        Materialized.with(Serdes.String(), mptcpFlowsSerde))
+                .toStream()
+         */
 
-        flowsEnrichedStream.peek((k,v) -> System.out.println(v)).to(OUTPUT_TOPIC);
+        var mptcpStreamWithKeys = mptcpPacketsStream
+                .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
 
-/*
         flowsEnrichedStream
-                .map((k,v) -> new KeyValue<>(v.getSrcAddr().toStringUtf8(), v))
-                .leftJoin(mptcpPacketsStream,
-                        (flows, mptcp) -> MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build(),
-                        JoinWindows.of(Duration.ofSeconds(10)))
-                .peek((k,v) -> System.out.println(v))
-                .to(OUTPUT_TOPIC);
-*/
+                .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
+                .leftJoin(mptcpStreamWithKeys,
+                        flowJoiner::join,
+                        JoinWindows.of(Duration.ofSeconds(3)),
+                        StreamJoined.with(Serdes.String(), enrichedFlowsSerde, mptcpMessageSerde))
+                .map((k, v) -> new KeyValue<>(v.getSrcAddr().toStringUtf8(), v))
+                .peek((k,v) -> {
+                    System.out.println(k);
+                    System.out.println("---------");
+                    System.out.println(v);
+                })
+                .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), mptcpFlowsSerde));
 
         return builder.build();
     }
 
-    private MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage createJoined(FlowMessageEnrichedPb.FlowMessage flowMessage,
-                                                                     MPTCPMessageProto.MPTCPMessage mptcpMessage) {
-        log.info("CALLED joiner");
-        if(mptcpMessage == null) {
-            System.out.println("MPTCP message is NULL");
-        } else if (flowMessage == null) {
-            System.out.println("FLOW message is NULL");
-        } else {
-            System.out.println("NOTHING is null");
-        }
-
-        return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build();
+    private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
+        String sourceAddr = flowMessage.getSrcAddr().toStringUtf8();
+        String destAddr = flowMessage.getDstAddr().toStringUtf8();
+        int seqNum = flowMessage.getSequenceNum();
+        return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
     }
 
-
-    private KTable<Windowed<String>, MPTCPMessageProto.MPTCPMessage> mptcpPacketsToFlow(KStream<String,
-            MPTCPMessageProto.MPTCPMessage> packets) {
-        return packets
-                .groupBy((key, value) -> value.getSrcAddr() + /*value.getSrcPort() +*/ value.getDstAddr() /*+ value.getDstPort()*/)
-                .windowedBy(TimeWindows.of(Duration.ofSeconds(5)))
-                .aggregate(
-                        () -> MPTCPMessageProto.MPTCPMessage.newBuilder().build(),
-                        (key, value, accumulator) ->
-                                MPTCPMessageProto.MPTCPMessage
-                                        .newBuilder(accumulator)
-                                        .setSrcPort(value.getSrcPort())
-                                        .setDstPort(value.getDstPort())
-                                        .setSrcAddr(value.getSrcAddr())
-                                        .setDstAddr(value.getDstAddr())
-                                        .addAllMptcpOptions(value.getMptcpOptionsList())
-                                        .build(),
-                        Materialized.with(Serdes.String(), mptcpMessageSerde)
-                );
+    private String keyBuilderMPTCP(MPTCPMessageProto.MPTCPMessage mptcpMessage) {
+        String sourceAddr = mptcpMessage.getSrcAddr();
+        String destAddr = mptcpMessage.getDstAddr();
+        int seqNum = mptcpMessage.getSeqNum();
+        return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
     }
-
 }
