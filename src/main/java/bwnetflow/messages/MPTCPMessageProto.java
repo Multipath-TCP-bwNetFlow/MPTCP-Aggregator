@@ -55,24 +55,30 @@ public final class MPTCPMessageProto {
     int getDstPort();
 
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>uint32 seqNum = 5;</code>
+     * @return The seqNum.
+     */
+    int getSeqNum();
+
+    /**
+     * <code>repeated string mptcpOptions = 6;</code>
      * @return A list containing the mptcpOptions.
      */
     java.util.List<java.lang.String>
         getMptcpOptionsList();
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @return The count of mptcpOptions.
      */
     int getMptcpOptionsCount();
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @param index The index of the element to return.
      * @return The mptcpOptions at the given index.
      */
     java.lang.String getMptcpOptions(int index);
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @param index The index of the value to return.
      * @return The bytes of the mptcpOptions at the given index.
      */
@@ -150,7 +156,12 @@ public final class MPTCPMessageProto {
               dstPort_ = input.readUInt32();
               break;
             }
-            case 42: {
+            case 40: {
+
+              seqNum_ = input.readUInt32();
+              break;
+            }
+            case 50: {
               java.lang.String s = input.readStringRequireUtf8();
               if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 mptcpOptions_ = new com.google.protobuf.LazyStringArrayList();
@@ -292,10 +303,21 @@ public final class MPTCPMessageProto {
       return dstPort_;
     }
 
-    public static final int MPTCPOPTIONS_FIELD_NUMBER = 5;
+    public static final int SEQNUM_FIELD_NUMBER = 5;
+    private int seqNum_;
+    /**
+     * <code>uint32 seqNum = 5;</code>
+     * @return The seqNum.
+     */
+    @java.lang.Override
+    public int getSeqNum() {
+      return seqNum_;
+    }
+
+    public static final int MPTCPOPTIONS_FIELD_NUMBER = 6;
     private com.google.protobuf.LazyStringList mptcpOptions_;
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @return A list containing the mptcpOptions.
      */
     public com.google.protobuf.ProtocolStringList
@@ -303,14 +325,14 @@ public final class MPTCPMessageProto {
       return mptcpOptions_;
     }
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @return The count of mptcpOptions.
      */
     public int getMptcpOptionsCount() {
       return mptcpOptions_.size();
     }
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @param index The index of the element to return.
      * @return The mptcpOptions at the given index.
      */
@@ -318,7 +340,7 @@ public final class MPTCPMessageProto {
       return mptcpOptions_.get(index);
     }
     /**
-     * <code>repeated string mptcpOptions = 5;</code>
+     * <code>repeated string mptcpOptions = 6;</code>
      * @param index The index of the value to return.
      * @return The bytes of the mptcpOptions at the given index.
      */
@@ -353,8 +375,11 @@ public final class MPTCPMessageProto {
       if (dstPort_ != 0) {
         output.writeUInt32(4, dstPort_);
       }
+      if (seqNum_ != 0) {
+        output.writeUInt32(5, seqNum_);
+      }
       for (int i = 0; i < mptcpOptions_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, mptcpOptions_.getRaw(i));
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, mptcpOptions_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -378,6 +403,10 @@ public final class MPTCPMessageProto {
       if (dstPort_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(4, dstPort_);
+      }
+      if (seqNum_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(5, seqNum_);
       }
       {
         int dataSize = 0;
@@ -410,6 +439,8 @@ public final class MPTCPMessageProto {
           != other.getSrcPort()) return false;
       if (getDstPort()
           != other.getDstPort()) return false;
+      if (getSeqNum()
+          != other.getSeqNum()) return false;
       if (!getMptcpOptionsList()
           .equals(other.getMptcpOptionsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -431,6 +462,8 @@ public final class MPTCPMessageProto {
       hash = (53 * hash) + getSrcPort();
       hash = (37 * hash) + DSTPORT_FIELD_NUMBER;
       hash = (53 * hash) + getDstPort();
+      hash = (37 * hash) + SEQNUM_FIELD_NUMBER;
+      hash = (53 * hash) + getSeqNum();
       if (getMptcpOptionsCount() > 0) {
         hash = (37 * hash) + MPTCPOPTIONS_FIELD_NUMBER;
         hash = (53 * hash) + getMptcpOptionsList().hashCode();
@@ -576,6 +609,8 @@ public final class MPTCPMessageProto {
 
         dstPort_ = 0;
 
+        seqNum_ = 0;
+
         mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
@@ -609,6 +644,7 @@ public final class MPTCPMessageProto {
         result.dstAddr_ = dstAddr_;
         result.srcPort_ = srcPort_;
         result.dstPort_ = dstPort_;
+        result.seqNum_ = seqNum_;
         if (((bitField0_ & 0x00000001) != 0)) {
           mptcpOptions_ = mptcpOptions_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -675,6 +711,9 @@ public final class MPTCPMessageProto {
         }
         if (other.getDstPort() != 0) {
           setDstPort(other.getDstPort());
+        }
+        if (other.getSeqNum() != 0) {
+          setSeqNum(other.getSeqNum());
         }
         if (!other.mptcpOptions_.isEmpty()) {
           if (mptcpOptions_.isEmpty()) {
@@ -930,6 +969,37 @@ public final class MPTCPMessageProto {
         return this;
       }
 
+      private int seqNum_ ;
+      /**
+       * <code>uint32 seqNum = 5;</code>
+       * @return The seqNum.
+       */
+      @java.lang.Override
+      public int getSeqNum() {
+        return seqNum_;
+      }
+      /**
+       * <code>uint32 seqNum = 5;</code>
+       * @param value The seqNum to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSeqNum(int value) {
+        
+        seqNum_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>uint32 seqNum = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSeqNum() {
+        
+        seqNum_ = 0;
+        onChanged();
+        return this;
+      }
+
       private com.google.protobuf.LazyStringList mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureMptcpOptionsIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
@@ -938,7 +1008,7 @@ public final class MPTCPMessageProto {
          }
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @return A list containing the mptcpOptions.
        */
       public com.google.protobuf.ProtocolStringList
@@ -946,14 +1016,14 @@ public final class MPTCPMessageProto {
         return mptcpOptions_.getUnmodifiableView();
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @return The count of mptcpOptions.
        */
       public int getMptcpOptionsCount() {
         return mptcpOptions_.size();
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param index The index of the element to return.
        * @return The mptcpOptions at the given index.
        */
@@ -961,7 +1031,7 @@ public final class MPTCPMessageProto {
         return mptcpOptions_.get(index);
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param index The index of the value to return.
        * @return The bytes of the mptcpOptions at the given index.
        */
@@ -970,7 +1040,7 @@ public final class MPTCPMessageProto {
         return mptcpOptions_.getByteString(index);
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param index The index to set the value at.
        * @param value The mptcpOptions to set.
        * @return This builder for chaining.
@@ -986,7 +1056,7 @@ public final class MPTCPMessageProto {
         return this;
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param value The mptcpOptions to add.
        * @return This builder for chaining.
        */
@@ -1001,7 +1071,7 @@ public final class MPTCPMessageProto {
         return this;
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param values The mptcpOptions to add.
        * @return This builder for chaining.
        */
@@ -1014,7 +1084,7 @@ public final class MPTCPMessageProto {
         return this;
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @return This builder for chaining.
        */
       public Builder clearMptcpOptions() {
@@ -1024,7 +1094,7 @@ public final class MPTCPMessageProto {
         return this;
       }
       /**
-       * <code>repeated string mptcpOptions = 5;</code>
+       * <code>repeated string mptcpOptions = 6;</code>
        * @param value The bytes of the mptcpOptions to add.
        * @return This builder for chaining.
        */
@@ -1106,12 +1176,12 @@ public final class MPTCPMessageProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\031proto/mptcp_message.proto\022\004main\"h\n\014MPT" +
+      "\n\031proto/mptcp_message.proto\022\004main\"x\n\014MPT" +
       "CPMessage\022\017\n\007srcAddr\030\001 \001(\t\022\017\n\007dstAddr\030\002 " +
-      "\001(\t\022\017\n\007srcPort\030\003 \001(\r\022\017\n\007dstPort\030\004 \001(\r\022\024\n" +
-      "\014mptcpOptions\030\005 \003(\tB?\n\tbwnetflowB\021MPTCPM" +
-      "essageProtoZ\037github.com/protobuf/types/m" +
-      "ptcpb\006proto3"
+      "\001(\t\022\017\n\007srcPort\030\003 \001(\r\022\017\n\007dstPort\030\004 \001(\r\022\016\n" +
+      "\006seqNum\030\005 \001(\r\022\024\n\014mptcpOptions\030\006 \003(\tB?\n\tb" +
+      "wnetflowB\021MPTCPMessageProtoZ\037github.com/" +
+      "protobuf/types/mptcpb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -1122,7 +1192,7 @@ public final class MPTCPMessageProto {
     internal_static_main_MPTCPMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_main_MPTCPMessage_descriptor,
-        new java.lang.String[] { "SrcAddr", "DstAddr", "SrcPort", "DstPort", "MptcpOptions", });
+        new java.lang.String[] { "SrcAddr", "DstAddr", "SrcPort", "DstPort", "SeqNum", "MptcpOptions", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
