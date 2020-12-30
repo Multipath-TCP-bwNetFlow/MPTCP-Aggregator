@@ -48,5 +48,12 @@ public class TestValues {
             "222.222.222", 1111,2222, 6000);
 
 
+    public static final FlowMessageEnrichedPb.FlowMessage FLOW_MSG2 = TestValues.enrichedFlowMessage("111.111.111",
+            "555.555.555", 1111,2222, 6000);
 
+    public static final MPTCPMessageProto.MPTCPMessage MPTCP_MESSAGE2 = TestValues.mptcpMessage("111.111.111",
+            "555.555.555", 1111,2222, 6000);
+
+    public static final FlowMessageEnrichedPb.FlowMessage FLOW_MSG3 = TestValues.enrichedFlowMessage("111.111.111",
+            "333.333.333", 1111,2222, 6000);
 }

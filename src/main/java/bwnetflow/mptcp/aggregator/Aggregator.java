@@ -8,17 +8,18 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.JoinWindows;
+import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.StreamJoined;
 import org.apache.log4j.Logger;
 
 import java.time.Duration;
 
-public class Aggregator {
+import static bwnetflow.mptcp.aggregator.Topics.*;
 
-    public static final String MPTCP_TOPIC = "mptcp-packets";
-    public static final String FLOWS_ENRICHED_TOPIC = "flows-enriched";
-    public static final String OUTPUT_TOPIC = "mptcp-flows-joined";
+@SuppressWarnings("unchecked")
+public class Aggregator {
 
     private final Logger log = Logger.getLogger(Aggregator.class.getName());
 
@@ -33,23 +34,11 @@ public class Aggregator {
 
     private final FlowJoiner flowJoiner = new FlowJoiner();
 
-    public Topology createAggregatorTopology() {
-        StreamsBuilder builder = new StreamsBuilder();
+    public void create(StreamsBuilder builder) {
         var mptcpPacketsStream = builder.stream(MPTCP_TOPIC,
                 Consumed.with(Serdes.String(), mptcpMessageSerde));
         var flowsEnrichedStream = builder.stream(FLOWS_ENRICHED_TOPIC,
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
-
-
-        // dedpulication: https://github.com/confluentinc/kafka-streams-examples/blob/6.0.1-post/src/test/java/io/confluent/examples/streams/EventDeduplicationLambdaIntegrationTest.java
-        // or exactly once semantics
-
-        /* Works only in rable rep: No gurantee that a client reads data as Tables
-                        .groupByKey(Grouped.with(Serdes.String(), mptcpFlowsSerde))
-                .reduce((accumulator, newValue) -> newValue.getIsMPTCPFlow() ? newValue : accumulator, // Does not work. when returned to stream representation duplicates are still there
-                        Materialized.with(Serdes.String(), mptcpFlowsSerde))
-                .toStream()
-         */
 
         var mptcpStreamWithKeys = mptcpPacketsStream
                 .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
@@ -60,15 +49,7 @@ public class Aggregator {
                         flowJoiner::join,
                         JoinWindows.of(Duration.ofSeconds(3)),
                         StreamJoined.with(Serdes.String(), enrichedFlowsSerde, mptcpMessageSerde))
-                .map((k, v) -> new KeyValue<>(v.getSrcAddr().toStringUtf8(), v))
-                .peek((k,v) -> {
-                    System.out.println(k);
-                    System.out.println("---------");
-                    System.out.println(v);
-                })
                 .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), mptcpFlowsSerde));
-
-        return builder.build();
     }
 
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
