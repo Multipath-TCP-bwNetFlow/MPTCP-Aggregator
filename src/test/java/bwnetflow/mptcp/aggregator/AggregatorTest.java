@@ -3,13 +3,7 @@ package bwnetflow.mptcp.aggregator;
 import bwnetflow.messages.FlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPMessageProto;
-import bwnetflow.serdes.proto.KafkaProtobufDeserializer;
-import bwnetflow.serdes.proto.KafkaProtobufSerde;
-import bwnetflow.serdes.proto.KafkaProtobufSerializer;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.state.Stores;
 import org.junit.jupiter.api.AfterEach;
@@ -21,35 +15,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Properties;
 
-import static bwnetflow.mptcp.aggregator.TestValues.*;
-import static bwnetflow.mptcp.aggregator.Topics.FLOWS_ENRICHED_TOPIC;
-import static bwnetflow.mptcp.aggregator.Topics.MPTCP_TOPIC;
-import static bwnetflow.mptcp.aggregator.Topics.OUTPUT_TOPIC;
+import static bwnetflow.mptcp.aggregator.TestFixtures.*;
+import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class AggregatorTest {
 
     private TopologyTestDriver testDriver;
-
-    private final StringSerializer stringSerializer = new StringSerializer();
-    private final StringDeserializer stringDeserializer = new StringDeserializer();
-
-    private final KafkaProtobufSerializer<FlowMessageEnrichedPb.FlowMessage> flowMessageSerializer
-            = new KafkaProtobufSerializer<>();
-
-    private final KafkaProtobufSerializer<MPTCPMessageProto.MPTCPMessage> mptcpMessageSerializer
-            = new KafkaProtobufSerializer<>();
-
-    private final KafkaProtobufSerializer<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowSerializer
-            = new KafkaProtobufSerializer<>();
-
-
-    private final Serde<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowsSerde =
-            new KafkaProtobufSerde<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
-
-    private final KafkaProtobufDeserializer<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowMessageDeserializer
-            = new KafkaProtobufDeserializer<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
 
     private TestInputTopic<String, FlowMessageEnrichedPb.FlowMessage> flowMessageInputTopic;
     private TestInputTopic<String, MPTCPMessageProto.MPTCPMessage> mptcpMessageInputTopic;
@@ -62,7 +35,9 @@ public class AggregatorTest {
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
 
-        Aggregator aggregator = new Aggregator();
+        int joinWindow = 3;
+
+        Aggregator aggregator = new Aggregator(FLOWS_ENRICHED_TOPIC, MPTCP_TOPIC, joinWindow);
         StreamsBuilder builder = new StreamsBuilder();
 
         aggregator.create(builder);
@@ -75,8 +50,8 @@ public class AggregatorTest {
                 .withCachingEnabled();
 
         topology
-                .addSource("Source", stringDeserializer, mptcpFlowMessageDeserializer, OUTPUT_TOPIC)
-                .addProcessor("DeduplicationProcessor", DeduplicationProcessor::new, "Source")
+                .addSource("Source", stringDeserializer, mptcpFlowMessageDeserializer, AGGREGATOR_OUTPUT)
+                .addProcessor("DeduplicationProcessor", DeduplicationProcessor.supplier(joinWindow), "Source")
                 .addStateStore(store, "DeduplicationProcessor")
                 .addSink("Sink", "FOO-OUTPUT", stringSerializer, mptcpFlowSerializer,"DeduplicationProcessor");
 
@@ -147,7 +122,7 @@ public class AggregatorTest {
         this.mptcpMessageInputTopic = testDriver.createInputTopic(MPTCP_TOPIC,
                 stringSerializer,
                 mptcpMessageSerializer);
-        this.mptcpFlowOutputTopic = testDriver.createOutputTopic(OUTPUT_TOPIC,
+        this.mptcpFlowOutputTopic = testDriver.createOutputTopic(AGGREGATOR_OUTPUT,
                 stringDeserializer,
                 mptcpFlowMessageDeserializer);
 

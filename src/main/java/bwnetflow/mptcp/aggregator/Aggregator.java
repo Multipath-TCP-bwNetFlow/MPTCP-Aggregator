@@ -16,9 +16,8 @@ import org.apache.log4j.Logger;
 
 import java.time.Duration;
 
-import static bwnetflow.mptcp.aggregator.Topics.*;
+import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 
-@SuppressWarnings("unchecked")
 public class Aggregator {
 
     private final Logger log = Logger.getLogger(Aggregator.class.getName());
@@ -34,10 +33,21 @@ public class Aggregator {
 
     private final FlowJoiner flowJoiner = new FlowJoiner();
 
+    private final String flowInputTopic;
+    private final String mptcpInputTopic;
+    private final int joinWindow;
+
+    public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow) {
+        this.flowInputTopic = flowInputTopic;
+        this.mptcpInputTopic = mptcpInputTopic;
+        this.joinWindow = joinWindow;
+    }
+
+
     public void create(StreamsBuilder builder) {
-        var mptcpPacketsStream = builder.stream(MPTCP_TOPIC,
+        var mptcpPacketsStream = builder.stream(mptcpInputTopic,
                 Consumed.with(Serdes.String(), mptcpMessageSerde));
-        var flowsEnrichedStream = builder.stream(FLOWS_ENRICHED_TOPIC,
+        var flowsEnrichedStream = builder.stream(flowInputTopic,
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
         var mptcpStreamWithKeys = mptcpPacketsStream
@@ -47,9 +57,9 @@ public class Aggregator {
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
                 .leftJoin(mptcpStreamWithKeys,
                         flowJoiner::join,
-                        JoinWindows.of(Duration.ofSeconds(3)),
+                        JoinWindows.of(Duration.ofSeconds(joinWindow)),
                         StreamJoined.with(Serdes.String(), enrichedFlowsSerde, mptcpMessageSerde))
-                .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), mptcpFlowsSerde));
+                .to(AGGREGATOR_OUTPUT, Produced.with(Serdes.String(), mptcpFlowsSerde));
     }
 
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {

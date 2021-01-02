@@ -1,6 +1,8 @@
 package bwnetflow.application;
 
 
+import bwnetflow.configuration.impl.CLIConfigurator;
+import bwnetflow.configuration.Configuration;
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
 import bwnetflow.mptcp.aggregator.Aggregator;
 import bwnetflow.mptcp.aggregator.DeduplicationProcessor;
@@ -13,19 +15,18 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.state.Stores;
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
 
-import static bwnetflow.mptcp.aggregator.Topics.OUTPUT_TOPIC;
+import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 
 
-public class Main {
+public class Application {
 
-    private final static Logger log = Logger.getLogger(Main.class.getName());
+    private final static Logger log = Logger.getLogger(Application.class.getName());
 
     private final static Serde<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowsSerde =
             new KafkaProtobufSerde<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
@@ -37,13 +38,17 @@ public class Main {
             = new KafkaProtobufSerializer<>();
 
     public static void main(String[] args) {
-        Properties properties = createProperties();
-        Aggregator aggregator = new Aggregator();
+        Configuration config = new CLIConfigurator().parseCLIArguments(args);
+
+        Properties properties = config.createKafkaProperties();
+        Aggregator aggregator = new Aggregator(config.getBwNetFlowflowInputTopic(),
+                config.getMptcpFlowflowInputTopic(), config.getJoinWindow());
 
         StreamsBuilder builder = new StreamsBuilder();
         aggregator.create(builder);
-
         Topology topology = builder.build();
+
+        var dedupProcessor = DeduplicationProcessor.supplier(config.getJoinWindow());
 
         var contributorStoreSupplier = Stores.persistentKeyValueStore("deduplication-store");
 
@@ -52,10 +57,10 @@ public class Main {
                 .withCachingEnabled();
 
         topology
-                .addSource("Source", new StringDeserializer(), mptcpFlowMessageDeserializer, OUTPUT_TOPIC)
-                .addProcessor("DeduplicationProcessor", DeduplicationProcessor::new, "Source")
+                .addSource("Source", new StringDeserializer(), mptcpFlowMessageDeserializer, AGGREGATOR_OUTPUT)
+                .addProcessor("DeduplicationProcessor", dedupProcessor, "Source")
                 .addStateStore(store, "DeduplicationProcessor")
-                .addSink("Sink", "FINAL-OUTPUT", new StringSerializer(), mptcpFlowSerializer,"DeduplicationProcessor");
+                .addSink("Sink", config.getOutputTopic(), new StringSerializer(), mptcpFlowSerializer,"DeduplicationProcessor");
 
         KafkaStreams streams = new KafkaStreams(topology, properties);
 
@@ -64,18 +69,5 @@ public class Main {
         });
         streams.start();
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-    }
-
-
-   private static Properties createProperties() {
-        Properties properties = new Properties();
-        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "mptcp-aggregator-application");
-        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass());
-        properties.put(StreamsConfig.STATE_DIR_CONFIG, "/state");
-
-        // TODO find most optimal properties
-        return properties;
     }
 }
