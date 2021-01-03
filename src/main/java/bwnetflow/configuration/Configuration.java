@@ -46,7 +46,7 @@ public class Configuration {
         properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokerAddress); // "localhost:9092"
         properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass());
-        properties.put(StreamsConfig.STATE_DIR_CONFIG, "/state");
+        // properties.put(StreamsConfig.STATE_DIR_CONFIG, "/state");
         return properties;
     }
 }
