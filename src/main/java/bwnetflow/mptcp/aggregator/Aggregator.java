@@ -14,6 +14,8 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.StreamJoined;
 import org.apache.log4j.Logger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 
 import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
@@ -63,8 +65,14 @@ public class Aggregator {
     }
 
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
-        String sourceAddr = flowMessage.getSrcAddr().toStringUtf8();
-        String destAddr = flowMessage.getDstAddr().toStringUtf8();
+        String sourceAddr = "N/A";
+        String destAddr = "N/A";
+        try {
+            sourceAddr = InetAddress.getByAddress(flowMessage.getDstAddr().toByteArray()).toString().substring(1);
+            destAddr = InetAddress.getByAddress(flowMessage.getDstAddr().toByteArray()).toString().substring(1);
+        } catch (UnknownHostException e) {
+            log.warn("Could not convert read ip address", e);
+        }
         int seqNum = flowMessage.getSequenceNum();
         return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
     }
