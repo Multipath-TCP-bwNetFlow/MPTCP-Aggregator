@@ -46,12 +46,15 @@ public class CLIConfigurator implements Configurator {
             String bwNetFlowInputTopic = cmd.getOptionValue("bwNetFlowInputTopic");
             String mptcpFlowInputTopic = cmd.getOptionValue("mptcpFlowInputTopic");
             String outputTopic = cmd.getOptionValue("outputTopic");
-            Integer joinWindow = (Integer) cmd.getParsedOptionValue("joinWindow");
+            int joinWindow = Integer.parseInt(cmd.getOptionValue("joinWindow"));
             return new Configuration(kafkaBrokerAddress, bwNetFlowInputTopic, mptcpFlowInputTopic,
                     outputTopic, joinWindow);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("mptcp_aggregator", options);
+            System.exit(1);
+        } catch (NumberFormatException e) {
+            System.out.println("joinWindow must be an integer");
             System.exit(1);
         }
         return null;
