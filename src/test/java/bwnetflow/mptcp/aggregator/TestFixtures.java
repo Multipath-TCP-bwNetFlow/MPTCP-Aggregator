@@ -11,6 +11,9 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class TestFixtures {
 
     public static final String MPTCP_TOPIC = "mptcp-packets";
@@ -38,8 +41,8 @@ public class TestFixtures {
     public static FlowMessageEnrichedPb.FlowMessage enrichedFlowMessage(String srcIp, String dstIp, int srcPort,
                                                                         int dstPort, int seqNum) {
         return FlowMessageEnrichedPb.FlowMessage.newBuilder()
-                .setSrcAddr(ByteString.copyFromUtf8(srcIp))
-                .setDstAddr(ByteString.copyFromUtf8(dstIp))
+                .setSrcAddr(stringIpToByteString(srcIp))
+                .setDstAddr(stringIpToByteString(dstIp))
                 .setSrcPort(srcPort)
                 .setDstPort(dstPort)
                 .setSequenceNum(seqNum)
@@ -49,8 +52,8 @@ public class TestFixtures {
     public static MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage mptcpFlowMessage(String srcIp, String dstIp, int srcPort,
                                                                                int dstPort, int seqNum) {
         return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder()
-                .setSrcAddr(ByteString.copyFromUtf8(srcIp))
-                .setDstAddr(ByteString.copyFromUtf8(dstIp))
+                .setSrcAddr(stringIpToByteString(srcIp))
+                .setDstAddr(stringIpToByteString(dstIp))
                 .setSrcPort(srcPort)
                 .setDstPort(dstPort)
                 .setSequenceNum(seqNum)
@@ -77,11 +80,23 @@ public class TestFixtures {
 
 
     public static final FlowMessageEnrichedPb.FlowMessage FLOW_MSG2 = TestFixtures.enrichedFlowMessage("111.111.111",
-            "555.555.555", 1111,2222, 6000);
+            "222.222.111", 1111,2222, 6000);
 
     public static final MPTCPMessageProto.MPTCPMessage MPTCP_MESSAGE2 = TestFixtures.mptcpMessage("111.111.111",
-            "555.555.555", 1111,2222, 6000);
+            "222.222.111", 1111,2222, 6000);
 
     public static final FlowMessageEnrichedPb.FlowMessage FLOW_MSG3 = TestFixtures.enrichedFlowMessage("111.111.111",
-            "333.333.333", 1111,2222, 6000);
+            "222.222.100", 1111,2222, 6000);
+
+    private static ByteString stringIpToByteString(String ipString) {
+        InetAddress ip = null;
+        try {
+            ip = InetAddress.getByName(ipString);
+        } catch (UnknownHostException e) {
+            System.err.println(e.toString());
+            return ByteString.EMPTY;
+        }
+        byte[] bytes = ip.getAddress();
+        return ByteString.copyFrom(bytes);
+    }
 }
