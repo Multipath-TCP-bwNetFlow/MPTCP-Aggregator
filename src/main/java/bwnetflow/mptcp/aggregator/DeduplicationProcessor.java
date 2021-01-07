@@ -27,9 +27,13 @@ public class DeduplicationProcessor implements Processor<String, MPTCPFlowMessag
     public void init(ProcessorContext context) {
         this.store = (KeyValueStore<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage>) context.getStateStore("deduplication-store");
 
+        // PunctuationType MUST be Stream time !
         context.schedule(Duration.ofSeconds(this.joinWindowDuration), PunctuationType.WALL_CLOCK_TIME, (timestamp -> {
             var iter = store.all();
             iter.forEachRemaining((msg) -> {
+                System.out.println(msg.key); // TODO optional logging
+                System.out.println(msg.value.toString());
+                System.out.println(msg.value.getIsMPTCPFlow());
                 store.delete(msg.key);
                 context.forward(msg.key, msg.value);
             });
@@ -40,6 +44,14 @@ public class DeduplicationProcessor implements Processor<String, MPTCPFlowMessag
 
     @Override
     public void process(String key, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage value) {
+        var inStore = this.store.get(key);
+        if (inStore == null) {
+            this.store.put(key, value);
+            return;
+        }
+        if (inStore.getIsMPTCPFlow()) {
+            return; // Do not overwrite mptcp flow with same redundant flow without mptcp information.
+        }
         this.store.put(key, value);
     }
 
