@@ -17,5 +17,7 @@ message MPTCPMessage {
 
   uint32 seqNum = 5;
 
-  repeated string mptcpOptions = 6;
+  int64 timestampCaptured = 6;
+
+  repeated string mptcpOptions = 7;
 }

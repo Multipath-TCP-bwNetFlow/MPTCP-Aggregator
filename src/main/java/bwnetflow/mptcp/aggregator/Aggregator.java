@@ -45,7 +45,9 @@ public class Aggregator {
         this.joinWindow = joinWindow;
     }
 
-
+    // TODO seq num is not what was expected, we look at FLOWS. It is more like a flow counter which is incremented with each sended flow
+    // TODO remove seq num in keyBuilderFlow
+    // TODO work with ports instead
     public void create(StreamsBuilder builder) {
         var mptcpPacketsStream = builder.stream(mptcpInputTopic,
                 Consumed.with(Serdes.String(), mptcpMessageSerde));
@@ -55,11 +57,17 @@ public class Aggregator {
         var mptcpStreamWithKeys = mptcpPacketsStream
                 .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
 
+        mptcpStreamWithKeys.peek((k,v) -> {
+            System.out.println(k);
+            System.out.println(v);
+        });
+
         flowsEnrichedStream
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
                 .leftJoin(mptcpStreamWithKeys,
                         flowJoiner::join,
-                        JoinWindows.of(Duration.ofSeconds(joinWindow)),
+                      //  JoinWindows.of(Duration.ofSeconds(joinWindow)),
+                        JoinWindows.of(Duration.ofMinutes(3)), // TODO smaller value
                         StreamJoined.with(Serdes.String(), enrichedFlowsSerde, mptcpMessageSerde))
                 .to(AGGREGATOR_OUTPUT, Produced.with(Serdes.String(), mptcpFlowsSerde));
     }
@@ -68,19 +76,21 @@ public class Aggregator {
         String sourceAddr = "N/A";
         String destAddr = "N/A";
         try {
-            sourceAddr = InetAddress.getByAddress(flowMessage.getDstAddr().toByteArray()).toString().substring(1);
+            sourceAddr = InetAddress.getByAddress(flowMessage.getSrcAddr().toByteArray()).toString().substring(1);
             destAddr = InetAddress.getByAddress(flowMessage.getDstAddr().toByteArray()).toString().substring(1);
         } catch (UnknownHostException e) {
             log.warn("Could not convert read ip address", e);
         }
-        int seqNum = flowMessage.getSequenceNum();
-        return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
+      //  int seqNum = flowMessage.getSequenceNum();
+      //  return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
+        return String.format("%s:%s", sourceAddr, destAddr);
     }
 
     private String keyBuilderMPTCP(MPTCPMessageProto.MPTCPMessage mptcpMessage) {
         String sourceAddr = mptcpMessage.getSrcAddr();
         String destAddr = mptcpMessage.getDstAddr();
-        int seqNum = mptcpMessage.getSeqNum();
-        return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
+       // int seqNum = mptcpMessage.getSeqNum();
+       // return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
+        return String.format("%s:%s", sourceAddr, destAddr);
     }
 }
