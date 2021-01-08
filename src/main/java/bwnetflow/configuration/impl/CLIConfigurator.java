@@ -9,8 +9,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.log4j.Logger;
 
 public class CLIConfigurator implements Configurator {
+
+    private final static Logger log = Logger.getLogger(CLIConfigurator.class.getName());
 
     @Override
     public Configuration parseCLIArguments(String[] args) {
@@ -47,8 +50,10 @@ public class CLIConfigurator implements Configurator {
             String mptcpFlowInputTopic = cmd.getOptionValue("mptcpFlowInputTopic");
             String outputTopic = cmd.getOptionValue("outputTopic");
             int joinWindow = Integer.parseInt(cmd.getOptionValue("joinWindow"));
-            return new Configuration(kafkaBrokerAddress, bwNetFlowInputTopic, mptcpFlowInputTopic,
+            Configuration config =  new Configuration(kafkaBrokerAddress, bwNetFlowInputTopic, mptcpFlowInputTopic,
                     outputTopic, joinWindow);
+            logArguments(config);
+            return config;
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("mptcp_aggregator", options);
@@ -58,6 +63,10 @@ public class CLIConfigurator implements Configurator {
             System.exit(1);
         }
         return null;
+    }
+
+    private void logArguments(Configuration config) {
+        log.info(config.toString());
     }
 
 }

@@ -1,4 +1,4 @@
-package bwnetflow.mptcp.aggregator;
+package bwnetflow.aggregator;
 
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
 import org.apache.kafka.streams.processor.Processor;

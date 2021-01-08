@@ -49,4 +49,15 @@ public class Configuration {
         // properties.put(StreamsConfig.STATE_DIR_CONFIG, "/state");
         return properties;
     }
+
+    @Override
+    public String toString() {
+        return "Configuration{" +
+                "kafkaBrokerAddress='" + kafkaBrokerAddress + '\'' +
+                ", bwNetFlowflowInputTopic='" + bwNetFlowflowInputTopic + '\'' +
+                ", mptcpFlowflowInputTopic='" + mptcpFlowflowInputTopic + '\'' +
+                ", outputTopic='" + outputTopic + '\'' +
+                ", joinWindow=" + joinWindow +
+                '}';
+    }
 }

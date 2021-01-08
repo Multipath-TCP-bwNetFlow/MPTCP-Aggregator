@@ -1,4 +1,4 @@
-package bwnetflow.mptcp.aggregator;
+package bwnetflow.aggregator;
 
 import bwnetflow.messages.FlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
@@ -15,8 +15,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Properties;
 
-import static bwnetflow.mptcp.aggregator.TestFixtures.*;
-import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
+import static bwnetflow.aggregator.TestFixtures.*;
+import static bwnetflow.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 

@@ -1,10 +1,9 @@
-package bwnetflow.mptcp.aggregator;
+package bwnetflow.aggregator;
 
 import bwnetflow.messages.FlowMessageEnrichedPb;
-import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPMessageProto;
-import bwnetflow.serdes.proto.KafkaProtobufSerde;
-import org.apache.kafka.common.serialization.Serde;
+import bwnetflow.serdes.SerdeFactories;
+import bwnetflow.topology.StreamNode;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -18,26 +17,17 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
-import static bwnetflow.mptcp.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
+import static bwnetflow.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 
-public class Aggregator {
+public class Aggregator implements StreamNode {
 
     private final Logger log = Logger.getLogger(Aggregator.class.getName());
-
-    private final Serde<MPTCPMessageProto.MPTCPMessage> mptcpMessageSerde =
-            new KafkaProtobufSerde<>(MPTCPMessageProto.MPTCPMessage.parser());
-
-    private final Serde<FlowMessageEnrichedPb.FlowMessage> enrichedFlowsSerde =
-            new KafkaProtobufSerde<>(FlowMessageEnrichedPb.FlowMessage.parser());
-
-    private final Serde<MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> mptcpFlowsSerde =
-            new KafkaProtobufSerde<>(MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.parser());
 
     private final FlowJoiner flowJoiner = new FlowJoiner();
 
     private final String flowInputTopic;
     private final String mptcpInputTopic;
-    private final int joinWindow;
+    private final int joinWindow; // TODO use instead of hard coded value
 
     public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow) {
         this.flowInputTopic = flowInputTopic;
@@ -45,10 +35,12 @@ public class Aggregator {
         this.joinWindow = joinWindow;
     }
 
-    // TODO seq num is not what was expected, we look at FLOWS. It is more like a flow counter which is incremented with each sended flow
-    // TODO remove seq num in keyBuilderFlow
-    // TODO work with ports instead
+    @Override
     public void create(StreamsBuilder builder) {
+        var mptcpMessageSerde = SerdeFactories.MPTCPMessageSerdeFactory.get();
+        var enrichedFlowsSerde = SerdeFactories.EnrichedFlowsSerdeFactory.get();
+        var mptcpFlowsSerde = SerdeFactories.MPTCPFlowsSerdeFactory.get();
+
         var mptcpPacketsStream = builder.stream(mptcpInputTopic,
                 Consumed.with(Serdes.String(), mptcpMessageSerde));
         var flowsEnrichedStream = builder.stream(flowInputTopic,
@@ -56,11 +48,6 @@ public class Aggregator {
 
         var mptcpStreamWithKeys = mptcpPacketsStream
                 .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
-
-        mptcpStreamWithKeys.peek((k,v) -> {
-            System.out.println(k);
-            System.out.println(v);
-        });
 
         flowsEnrichedStream
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
@@ -72,6 +59,12 @@ public class Aggregator {
                 .to(AGGREGATOR_OUTPUT, Produced.with(Serdes.String(), mptcpFlowsSerde));
     }
 
+
+    // seq num is not what was expected, we look at FLOWS. It is more like a flow counter which is incremented with each sended flow
+    // remove seq num in keyBuilderFlow
+    //  work with ports instead
+
+    // must be passed to this class
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
         String sourceAddr = "N/A";
         String destAddr = "N/A";
@@ -86,6 +79,7 @@ public class Aggregator {
         return String.format("%s:%s", sourceAddr, destAddr);
     }
 
+    // must be passed to this class
     private String keyBuilderMPTCP(MPTCPMessageProto.MPTCPMessage mptcpMessage) {
         String sourceAddr = mptcpMessage.getSrcAddr();
         String destAddr = mptcpMessage.getDstAddr();
