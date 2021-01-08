@@ -5,19 +5,19 @@ import org.apache.kafka.streams.StreamsBuilder;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 
-public class KafkaStreamsAppDescriptor {
+public class KafkaStreamsAppBuilder {
 
-    private final static Logger log = Logger.getLogger(KafkaStreamsAppDescriptor.class.getName());
+    private final static Logger log = Logger.getLogger(KafkaStreamsAppBuilder.class.getName());
 
     private final StreamsBuilder streamsBuilder;
     private final Properties properties;
 
-    public KafkaStreamsAppDescriptor(Properties properties) {
+    public KafkaStreamsAppBuilder(Properties properties) {
         this.streamsBuilder = new StreamsBuilder();
         this.properties = properties;
     }
 
-    public KafkaStreamsAppDescriptor addStreamNode(StreamNode streamNode) {
+    public KafkaStreamsAppBuilder addStreamNode(StreamNode streamNode) {
         streamNode.create(this.streamsBuilder);
         return this;
     }

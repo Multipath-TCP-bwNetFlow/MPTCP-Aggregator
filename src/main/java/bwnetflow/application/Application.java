@@ -7,7 +7,7 @@ import bwnetflow.configuration.impl.CLIConfigurator;
 import bwnetflow.serdes.KafkaDeserializerFactories;
 import bwnetflow.serdes.KafkaSerializerFactories;
 import bwnetflow.serdes.SerdeFactories;
-import bwnetflow.topology.KafkaStreamsAppDescriptor;
+import bwnetflow.topology.KafkaStreamsAppBuilder;
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
@@ -32,7 +32,7 @@ public class Application {
     private void runKafkaStreamsApp() {
         log.info("Start up Stream Topology...");
         Properties kafkaProperties = config.createKafkaProperties();
-        new KafkaStreamsAppDescriptor(kafkaProperties)
+        new KafkaStreamsAppBuilder(kafkaProperties)
                 .addStreamNode(createAggregator())
                 .create()
                 .addProcessorNode(createDeduplicationProcessorNode())
