@@ -47,10 +47,12 @@ public class Aggregator implements StreamNode {
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
         var mptcpStreamWithKeys = mptcpPacketsStream
-                .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
+                .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v))
+                .peek((k,v) -> System.out.println(k));
 
         flowsEnrichedStream
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
+                .peek((k,v) -> System.out.println(k))
                 .leftJoin(mptcpStreamWithKeys,
                         flowJoiner::join,
                       //  JoinWindows.of(Duration.ofSeconds(joinWindow)),
