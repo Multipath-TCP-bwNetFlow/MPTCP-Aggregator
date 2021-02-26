@@ -42,7 +42,7 @@ public class Application {
     private Aggregator createAggregator() {
         return new Aggregator(config.getBwNetFlowflowInputTopic(),
                 config.getMptcpFlowflowInputTopic(), config.getJoinWindow(),
-                config.isLogMPTCP(), config.isLogFlows());
+                config.isLogMPTCP(), config.isLogFlows(), config.getAddressWhitelist());
     }
 
     private DeduplicationProcessorNode createDeduplicationProcessorNode() {

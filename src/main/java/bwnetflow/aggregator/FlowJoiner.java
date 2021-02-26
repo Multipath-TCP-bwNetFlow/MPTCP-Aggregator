@@ -17,12 +17,12 @@ public class FlowJoiner {
             log.warn("Invalid case: flow message is NULL");
             return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build();
         } else {
+            System.out.println("JOINED");
             return buildJoined(flowMessage, mptcpMessage);
         }
     }
 
     private MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage buildWithoutMPTCP(FlowMessageEnrichedPb.FlowMessage other) {
-        // TODO check if complete
         return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder()
                 .setTypeValue(other.getTypeValue())
                 .setTimeReceived(other.getTimeReceived())

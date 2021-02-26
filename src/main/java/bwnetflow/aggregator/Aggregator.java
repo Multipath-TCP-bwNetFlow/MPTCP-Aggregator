@@ -4,6 +4,7 @@ import bwnetflow.messages.FlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPMessageProto;
 import bwnetflow.serdes.SerdeFactories;
 import bwnetflow.topology.StreamNode;
+import com.google.protobuf.ByteString;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -16,6 +17,7 @@ import org.apache.log4j.Logger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.List;
 
 import static bwnetflow.aggregator.InternalTopic.AGGREGATOR_OUTPUT;
 
@@ -31,12 +33,16 @@ public class Aggregator implements StreamNode {
     private final boolean logMPTCP;
     private final boolean logFlows;
 
-    public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow, boolean logMPTCP, boolean logFlows) {
+    private final List<String> addressWhitelist;
+
+    public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow,
+                      boolean logMPTCP, boolean logFlows, List<String> addressWhitelist) {
         this.flowInputTopic = flowInputTopic;
         this.mptcpInputTopic = mptcpInputTopic;
         this.joinWindow = joinWindow;
         this.logMPTCP = logMPTCP;
         this.logFlows = logFlows;
+        this.addressWhitelist = addressWhitelist;
     }
 
     @Override
@@ -51,9 +57,11 @@ public class Aggregator implements StreamNode {
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
         var mptcpStreamWithKeys = mptcpPacketsStream
+                .filter((k,v) -> isInWhitelist(v.getSrcAddr(), v.getDstAddr()))
                 .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
 
         flowsEnrichedStream
+                .filter((k,v) -> isInWhitelist(v.getSrcAddr(), v.getDstAddr()))
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
                 .leftJoin(mptcpStreamWithKeys,
                         flowJoiner::join,
@@ -93,5 +101,14 @@ public class Aggregator implements StreamNode {
        // int seqNum = mptcpMessage.getSeqNum();
        // return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
         return String.format("%s:%s", sourceAddr, destAddr);
+    }
+
+    private boolean isInWhitelist(String src, String dst) {
+        if (addressWhitelist.isEmpty()) return true;
+        return addressWhitelist.contains(src) && addressWhitelist.contains(dst);
+    }
+
+    private boolean isInWhitelist(ByteString src, ByteString dst) {
+        return isInWhitelist(src.toString(), dst.toString());
     }
 }

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import static bwnetflow.aggregator.TestFixtures.*;
@@ -39,7 +40,7 @@ public class AggregatorTest {
 
         int joinWindow = 3;
 
-        Aggregator aggregator = new Aggregator(FLOWS_ENRICHED_TOPIC, MPTCP_TOPIC, joinWindow, false, false);
+        Aggregator aggregator = new Aggregator(FLOWS_ENRICHED_TOPIC, MPTCP_TOPIC, joinWindow, false, false, new ArrayList<>());
         StreamsBuilder builder = new StreamsBuilder();
 
         aggregator.create(builder);

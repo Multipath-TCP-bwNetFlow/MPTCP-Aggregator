@@ -11,6 +11,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class CLIConfigurator implements Configurator {
 
     private final static Logger log = Logger.getLogger(CLIConfigurator.class.getName());
@@ -55,6 +59,11 @@ public class CLIConfigurator implements Configurator {
         logJoinedPOption.setType(Boolean.class);
         options.addOption(logJoinedPOption);
 
+        Option addressWhitelist = new Option("a", "addressWhitelist", true, "filter out all flows with addresses not in this list. Use comma separated string");
+        addressWhitelist.setRequired(false);
+        addressWhitelist.setType(String.class);
+        options.addOption(addressWhitelist);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 
@@ -70,9 +79,15 @@ public class CLIConfigurator implements Configurator {
             boolean logFlow = Boolean.parseBoolean(cmd.getOptionValue("lf"));
             boolean logJoined = Boolean.parseBoolean(cmd.getOptionValue("lj"));
 
+            String whitelistString = cmd.getOptionValue("a");
+            List<String> whitelist = new ArrayList<>();
+            if (whitelistString != null) {
+                whitelist = cslToList(whitelistString);
+            }
+
             Configuration config =  new Configuration(kafkaBrokerAddress,
                     bwNetFlowInputTopic, mptcpFlowInputTopic,
-                    outputTopic, joinWindow, logMPTCP, logFlow, logJoined);
+                    outputTopic, joinWindow, logMPTCP, logFlow, logJoined, whitelist);
 
             logArguments(config);
             return config;
@@ -91,4 +106,7 @@ public class CLIConfigurator implements Configurator {
         log.info(config.toString());
     }
 
+    private List<String> cslToList(String csl) {
+        return Arrays.asList(csl.split("\\s*,\\s*"));
+    }
 }

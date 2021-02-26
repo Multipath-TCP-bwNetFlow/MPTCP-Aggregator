@@ -3,6 +3,7 @@ package bwnetflow.configuration;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 
+import java.util.List;
 import java.util.Properties;
 
 public class Configuration {
@@ -14,10 +15,12 @@ public class Configuration {
     private final boolean logMPTCP;
     private final boolean logFlows;
     private final boolean logJoined;
+    private final List<String> addressWhitelist;
 
     public Configuration(String kafkaBrokerAddress, String bwNetFlowflowInputTopic,
                          String mptcpFlowflowInputTopic, String outputTopic, int joinWindow,
-                         boolean logMPTCP, boolean logFlows, boolean logJoined) {
+                         boolean logMPTCP, boolean logFlows, boolean logJoined,
+                         List<String> addressWhitelist) {
         this.kafkaBrokerAddress = kafkaBrokerAddress;
         this.bwNetFlowflowInputTopic = bwNetFlowflowInputTopic;
         this.mptcpFlowflowInputTopic = mptcpFlowflowInputTopic;
@@ -26,6 +29,7 @@ public class Configuration {
         this.logMPTCP = logMPTCP;
         this.logFlows = logFlows;
         this.logJoined = logJoined;
+        this.addressWhitelist = addressWhitelist;
     }
 
     public String getKafkaBrokerAddress() {
@@ -58,6 +62,10 @@ public class Configuration {
 
     public boolean isLogJoined() {
         return logJoined;
+    }
+
+    public List<String> getAddressWhitelist() {
+        return addressWhitelist;
     }
 
     public Properties createKafkaProperties() {
