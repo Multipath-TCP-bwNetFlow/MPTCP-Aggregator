@@ -40,18 +40,18 @@ public class CLIConfigurator implements Configurator {
         joinWindowOption.setType(Integer.class);
         options.addOption(joinWindowOption);
 
-        Option logMPTCPOption = new Option("lm", "logMPTCP", false, "log incoming MPTCP packets");
-        logMPTCPOption.setRequired(false);
+        Option logMPTCPOption = new Option("lm", "logMPTCP", true, "log incoming MPTCP packets");
+        logMPTCPOption.setRequired(true);
         logMPTCPOption.setType(Boolean.class);
         options.addOption(logMPTCPOption);
 
-        Option logFlowPOption = new Option("lf", "logFlows", false, "log incoming flows");
-        logFlowPOption.setRequired(false);
+        Option logFlowPOption = new Option("lf", "logFlows", true, "log incoming flows");
+        logFlowPOption.setRequired(true);
         logFlowPOption.setType(Boolean.class);
         options.addOption(logFlowPOption);
 
-        Option logJoinedPOption = new Option("lj", "logJoined", false, "log joined packets");
-        logJoinedPOption.setRequired(false);
+        Option logJoinedPOption = new Option("lj", "logJoined", true, "log joined packets");
+        logJoinedPOption.setRequired(true);
         logJoinedPOption.setType(Boolean.class);
         options.addOption(logJoinedPOption);
 
@@ -66,9 +66,9 @@ public class CLIConfigurator implements Configurator {
             String outputTopic = cmd.getOptionValue("outputTopic");
             int joinWindow = Integer.parseInt(cmd.getOptionValue("joinWindow"));
 
-            boolean logMPTCP = cmd.hasOption("lm");
-            boolean logFlow = cmd.hasOption("lf");
-            boolean logJoined = cmd.hasOption("lj");
+            boolean logMPTCP = Boolean.parseBoolean(cmd.getOptionValue("lm"));
+            boolean logFlow = Boolean.parseBoolean(cmd.getOptionValue("lf"));
+            boolean logJoined = Boolean.parseBoolean(cmd.getOptionValue("lj"));
 
             Configuration config =  new Configuration(kafkaBrokerAddress,
                     bwNetFlowInputTopic, mptcpFlowInputTopic,

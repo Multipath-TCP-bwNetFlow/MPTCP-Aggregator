@@ -11,4 +11,7 @@ ENTRYPOINT java -jar mptcp_aggregator.jar -f ${BWNETFLOW_INPUT_TOPIC} \
     -k ${KAFKA_ADDRESS} \
     -m ${MPTCP_FLOW_INPUT_TOPIC}  \
     -o ${OUTPUT_TOPIC} \
-    -w ${JOIN_WINDOW_TIME}
+    -w ${JOIN_WINDOW_TIME} \
+    -lm ${LOG_MPTCP} \
+    -lf ${LOG_FLOW} \
+    -lj ${LOG_JOINED}
