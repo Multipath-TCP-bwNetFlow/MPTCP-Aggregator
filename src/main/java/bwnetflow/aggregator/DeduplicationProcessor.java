@@ -13,13 +13,16 @@ public class DeduplicationProcessor implements Processor<String, MPTCPFlowMessag
 
     private KeyValueStore<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> store;
     private final int joinWindowDuration;
+    private final boolean log;
 
-    public static ProcessorSupplier<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> supplier(int joinWindowDuration) {
-        return () -> new DeduplicationProcessor(joinWindowDuration);
+    public static ProcessorSupplier<String, MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage> supplier(int joinWindowDuration,
+                                                                                                  boolean log) {
+        return () -> new DeduplicationProcessor(joinWindowDuration, log);
     }
 
-    private DeduplicationProcessor(int joinWindowDuration) {
+    private DeduplicationProcessor(int joinWindowDuration, boolean log) {
         this.joinWindowDuration = joinWindowDuration;
+        this.log = log;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -31,9 +34,9 @@ public class DeduplicationProcessor implements Processor<String, MPTCPFlowMessag
         context.schedule(Duration.ofSeconds(this.joinWindowDuration), PunctuationType.WALL_CLOCK_TIME, (timestamp -> {
             var iter = store.all();
             iter.forEachRemaining((msg) -> {
-                /*System.out.println(msg.key);
-                System.out.println(msg.value.toString());
-                System.out.println(msg.value.getIsMPTCPFlow());*/
+                if (log) {
+                    System.out.println(msg.value.toString());
+                }
                 store.delete(msg.key);
                 context.forward(msg.key, msg.value);
             });

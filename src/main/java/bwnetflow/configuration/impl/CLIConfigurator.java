@@ -40,6 +40,21 @@ public class CLIConfigurator implements Configurator {
         joinWindowOption.setType(Integer.class);
         options.addOption(joinWindowOption);
 
+        Option logMPTCPOption = new Option("lm", "logMPTCP", false, "log incoming MPTCP packets");
+        logMPTCPOption.setRequired(false);
+        logMPTCPOption.setType(Boolean.class);
+        options.addOption(logMPTCPOption);
+
+        Option logFlowPOption = new Option("lf", "logFlows", false, "log incoming flows");
+        logFlowPOption.setRequired(false);
+        logFlowPOption.setType(Boolean.class);
+        options.addOption(logFlowPOption);
+
+        Option logJoinedPOption = new Option("lj", "logJoined", false, "log joined packets");
+        logJoinedPOption.setRequired(false);
+        logJoinedPOption.setType(Boolean.class);
+        options.addOption(logJoinedPOption);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 
@@ -50,8 +65,15 @@ public class CLIConfigurator implements Configurator {
             String mptcpFlowInputTopic = cmd.getOptionValue("mptcpFlowInputTopic");
             String outputTopic = cmd.getOptionValue("outputTopic");
             int joinWindow = Integer.parseInt(cmd.getOptionValue("joinWindow"));
-            Configuration config =  new Configuration(kafkaBrokerAddress, bwNetFlowInputTopic, mptcpFlowInputTopic,
-                    outputTopic, joinWindow);
+
+            boolean logMPTCP = cmd.hasOption("lm");
+            boolean logFlow = cmd.hasOption("lf");
+            boolean logJoined = cmd.hasOption("lj");
+
+            Configuration config =  new Configuration(kafkaBrokerAddress,
+                    bwNetFlowInputTopic, mptcpFlowInputTopic,
+                    outputTopic, joinWindow, logMPTCP, logFlow, logJoined);
+
             logArguments(config);
             return config;
         } catch (ParseException e) {

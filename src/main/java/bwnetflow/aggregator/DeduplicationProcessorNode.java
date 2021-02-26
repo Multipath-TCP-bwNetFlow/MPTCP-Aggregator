@@ -31,7 +31,7 @@ public class DeduplicationProcessorNode implements ProcessorNode {
         var store = Stores.keyValueStoreBuilder(contributorStoreSupplier,
                 Serdes.String(), mptcpFlowsSerde)
                 .withCachingEnabled();
-        var dedupProcessor = DeduplicationProcessor.supplier(configuration.getJoinWindow());
+        var dedupProcessor = DeduplicationProcessor.supplier(configuration.getJoinWindow(), configuration.isLogJoined());
 
         topology
                 .addSource("Source", new StringDeserializer(), mptcpFlowDeserializer, AGGREGATOR_OUTPUT)

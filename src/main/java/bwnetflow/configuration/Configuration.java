@@ -11,13 +11,21 @@ public class Configuration {
     private final String mptcpFlowflowInputTopic;
     private final String outputTopic;
     private final int joinWindow;
+    private final boolean logMPTCP;
+    private final boolean logFlows;
+    private final boolean logJoined;
 
-    public Configuration(String kafkaBrokerAddress, String bwNetFlowflowInputTopic, String mptcpFlowflowInputTopic,String outputTopic, int joinWindow) {
+    public Configuration(String kafkaBrokerAddress, String bwNetFlowflowInputTopic,
+                         String mptcpFlowflowInputTopic, String outputTopic, int joinWindow,
+                         boolean logMPTCP, boolean logFlows, boolean logJoined) {
         this.kafkaBrokerAddress = kafkaBrokerAddress;
         this.bwNetFlowflowInputTopic = bwNetFlowflowInputTopic;
         this.mptcpFlowflowInputTopic = mptcpFlowflowInputTopic;
         this.outputTopic = outputTopic;
         this.joinWindow = joinWindow;
+        this.logMPTCP = logMPTCP;
+        this.logFlows = logFlows;
+        this.logJoined = logJoined;
     }
 
     public String getKafkaBrokerAddress() {
@@ -38,6 +46,18 @@ public class Configuration {
 
     public int getJoinWindow() {
         return joinWindow;
+    }
+
+    public boolean isLogMPTCP() {
+        return logMPTCP;
+    }
+
+    public boolean isLogFlows() {
+        return logFlows;
+    }
+
+    public boolean isLogJoined() {
+        return logJoined;
     }
 
     public Properties createKafkaProperties() {

@@ -41,7 +41,8 @@ public class Application {
 
     private Aggregator createAggregator() {
         return new Aggregator(config.getBwNetFlowflowInputTopic(),
-                config.getMptcpFlowflowInputTopic(), config.getJoinWindow());
+                config.getMptcpFlowflowInputTopic(), config.getJoinWindow(),
+                config.isLogMPTCP(), config.isLogFlows());
     }
 
     private DeduplicationProcessorNode createDeduplicationProcessorNode() {

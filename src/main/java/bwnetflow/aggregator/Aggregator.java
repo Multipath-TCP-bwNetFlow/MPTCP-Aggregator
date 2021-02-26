@@ -27,12 +27,16 @@ public class Aggregator implements StreamNode {
 
     private final String flowInputTopic;
     private final String mptcpInputTopic;
-    private final int joinWindow; // TODO use instead of hard coded value
+    private final int joinWindow;
+    private final boolean logMPTCP;
+    private final boolean logFlows;
 
-    public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow) {
+    public Aggregator(String flowInputTopic, String mptcpInputTopic, int joinWindow, boolean logMPTCP, boolean logFlows) {
         this.flowInputTopic = flowInputTopic;
         this.mptcpInputTopic = mptcpInputTopic;
         this.joinWindow = joinWindow;
+        this.logMPTCP = logMPTCP;
+        this.logFlows = logFlows;
     }
 
     @Override
@@ -47,27 +51,25 @@ public class Aggregator implements StreamNode {
                 Consumed.with(Serdes.String(), enrichedFlowsSerde));
 
         var mptcpStreamWithKeys = mptcpPacketsStream
-                .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v))
-                .peek((k,v) -> System.out.println(k));
+                .map((k, v) -> new KeyValue<>(keyBuilderMPTCP(v), v));
 
         flowsEnrichedStream
                 .map((k,v) -> new KeyValue<>(keyBuilderFlow(v), v))
-                .peek((k,v) -> System.out.println(k))
                 .leftJoin(mptcpStreamWithKeys,
                         flowJoiner::join,
-                      //  JoinWindows.of(Duration.ofSeconds(joinWindow)),
-                        JoinWindows.of(Duration.ofMinutes(3)), // TODO smaller value
+                        JoinWindows.of(Duration.ofSeconds(joinWindow)),
                         StreamJoined.with(Serdes.String(), enrichedFlowsSerde, mptcpMessageSerde))
                 .to(AGGREGATOR_OUTPUT, Produced.with(Serdes.String(), mptcpFlowsSerde));
     }
 
-
     // seq num is not what was expected, we look at FLOWS. It is more like a flow counter which is incremented with each sended flow
     // remove seq num in keyBuilderFlow
     //  work with ports instead
-
-    // must be passed to this class
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
+        if (logFlows) {
+            System.out.println("Flow Time:");
+            System.out.println(flowMessage.getTimeReceived());
+        }
         String sourceAddr = "N/A";
         String destAddr = "N/A";
         try {
@@ -81,8 +83,11 @@ public class Aggregator implements StreamNode {
         return String.format("%s:%s", sourceAddr, destAddr);
     }
 
-    // must be passed to this class
     private String keyBuilderMPTCP(MPTCPMessageProto.MPTCPMessage mptcpMessage) {
+        if (logMPTCP) {
+            System.out.println("MPTCP Time:");
+            System.out.println(mptcpMessage.getTimestampCaptured());
+        }
         String sourceAddr = mptcpMessage.getSrcAddr();
         String destAddr = mptcpMessage.getDstAddr();
        // int seqNum = mptcpMessage.getSeqNum();

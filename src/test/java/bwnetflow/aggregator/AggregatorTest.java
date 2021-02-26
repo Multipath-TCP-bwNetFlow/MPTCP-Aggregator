@@ -39,7 +39,7 @@ public class AggregatorTest {
 
         int joinWindow = 3;
 
-        Aggregator aggregator = new Aggregator(FLOWS_ENRICHED_TOPIC, MPTCP_TOPIC, joinWindow);
+        Aggregator aggregator = new Aggregator(FLOWS_ENRICHED_TOPIC, MPTCP_TOPIC, joinWindow, false, false);
         StreamsBuilder builder = new StreamsBuilder();
 
         aggregator.create(builder);
@@ -53,7 +53,7 @@ public class AggregatorTest {
 
         topology
                 .addSource("Source", stringDeserializer, mptcpFlowMessageDeserializer, AGGREGATOR_OUTPUT)
-                .addProcessor("DeduplicationProcessor", DeduplicationProcessor.supplier(joinWindow), "Source")
+                .addProcessor("DeduplicationProcessor", DeduplicationProcessor.supplier(joinWindow, false), "Source")
                 .addStateStore(store, "DeduplicationProcessor")
                 .addSink("Sink", "FOO-OUTPUT", stringSerializer, mptcpFlowSerializer,"DeduplicationProcessor");
 
