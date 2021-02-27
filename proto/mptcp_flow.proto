@@ -143,5 +143,5 @@ message MPTCPFlowMessage {
   // Multipath TCP fields
   bool isMPTCPFlow = 2001;
   uint32 numOfAssociatedSubstreams = 2002;
-
+  repeated string mptcpOptions = 2003;
 }

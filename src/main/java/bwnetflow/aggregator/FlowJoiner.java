@@ -101,6 +101,7 @@ public class FlowJoiner {
         var withFlowMessage = buildWithoutMPTCP(flowMessage);
         return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder(withFlowMessage)
                 .setIsMPTCPFlow(true)
+                .addAllMptcpOptions(mptcpMessage.getMptcpOptionsList())
                 .build();
     }
 }

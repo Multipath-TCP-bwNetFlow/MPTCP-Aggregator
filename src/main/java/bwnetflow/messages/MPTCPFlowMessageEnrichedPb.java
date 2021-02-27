@@ -693,6 +693,31 @@ public final class MPTCPFlowMessageEnrichedPb {
      * @return The numOfAssociatedSubstreams.
      */
     int getNumOfAssociatedSubstreams();
+
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @return A list containing the mptcpOptions.
+     */
+    java.util.List<java.lang.String>
+        getMptcpOptionsList();
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @return The count of mptcpOptions.
+     */
+    int getMptcpOptionsCount();
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @param index The index of the element to return.
+     * @return The mptcpOptions at the given index.
+     */
+    java.lang.String getMptcpOptions(int index);
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the mptcpOptions at the given index.
+     */
+    com.google.protobuf.ByteString
+        getMptcpOptionsBytes(int index);
   }
   /**
    * Protobuf type {@code flowmessageenriched.MPTCPFlowMessage}
@@ -722,6 +747,7 @@ public final class MPTCPFlowMessageEnrichedPb {
       dstIfDesc_ = "";
       protoName_ = "";
       remoteCountry_ = "";
+      mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -744,6 +770,7 @@ public final class MPTCPFlowMessageEnrichedPb {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -1143,6 +1170,15 @@ public final class MPTCPFlowMessageEnrichedPb {
               numOfAssociatedSubstreams_ = input.readUInt32();
               break;
             }
+            case 16026: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                mptcpOptions_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              mptcpOptions_.add(s);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1158,6 +1194,9 @@ public final class MPTCPFlowMessageEnrichedPb {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          mptcpOptions_ = mptcpOptions_.getUnmodifiableView();
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2627,6 +2666,41 @@ public final class MPTCPFlowMessageEnrichedPb {
       return numOfAssociatedSubstreams_;
     }
 
+    public static final int MPTCPOPTIONS_FIELD_NUMBER = 2003;
+    private com.google.protobuf.LazyStringList mptcpOptions_;
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @return A list containing the mptcpOptions.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getMptcpOptionsList() {
+      return mptcpOptions_;
+    }
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @return The count of mptcpOptions.
+     */
+    public int getMptcpOptionsCount() {
+      return mptcpOptions_.size();
+    }
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @param index The index of the element to return.
+     * @return The mptcpOptions at the given index.
+     */
+    public java.lang.String getMptcpOptions(int index) {
+      return mptcpOptions_.get(index);
+    }
+    /**
+     * <code>repeated string mptcpOptions = 2003;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the mptcpOptions at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getMptcpOptionsBytes(int index) {
+      return mptcpOptions_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2868,6 +2942,9 @@ public final class MPTCPFlowMessageEnrichedPb {
       }
       if (numOfAssociatedSubstreams_ != 0) {
         output.writeUInt32(2002, numOfAssociatedSubstreams_);
+      }
+      for (int i = 0; i < mptcpOptions_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2003, mptcpOptions_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -3175,6 +3252,14 @@ public final class MPTCPFlowMessageEnrichedPb {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(2002, numOfAssociatedSubstreams_);
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < mptcpOptions_.size(); i++) {
+          dataSize += computeStringSizeNoTag(mptcpOptions_.getRaw(i));
+        }
+        size += dataSize;
+        size += 2 * getMptcpOptionsList().size();
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3340,6 +3425,8 @@ public final class MPTCPFlowMessageEnrichedPb {
           != other.getIsMPTCPFlow()) return false;
       if (getNumOfAssociatedSubstreams()
           != other.getNumOfAssociatedSubstreams()) return false;
+      if (!getMptcpOptionsList()
+          .equals(other.getMptcpOptionsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3515,6 +3602,10 @@ public final class MPTCPFlowMessageEnrichedPb {
           getIsMPTCPFlow());
       hash = (37 * hash) + NUMOFASSOCIATEDSUBSTREAMS_FIELD_NUMBER;
       hash = (53 * hash) + getNumOfAssociatedSubstreams();
+      if (getMptcpOptionsCount() > 0) {
+        hash = (37 * hash) + MPTCPOPTIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getMptcpOptionsList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3800,6 +3891,8 @@ public final class MPTCPFlowMessageEnrichedPb {
 
         numOfAssociatedSubstreams_ = 0;
 
+        mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -3826,6 +3919,7 @@ public final class MPTCPFlowMessageEnrichedPb {
       @java.lang.Override
       public MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage buildPartial() {
         MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage result = new MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage(this);
+        int from_bitField0_ = bitField0_;
         result.type_ = type_;
         result.timeReceived_ = timeReceived_;
         result.sequenceNum_ = sequenceNum_;
@@ -3902,6 +3996,11 @@ public final class MPTCPFlowMessageEnrichedPb {
         result.remoteCountry_ = remoteCountry_;
         result.isMPTCPFlow_ = isMPTCPFlow_;
         result.numOfAssociatedSubstreams_ = numOfAssociatedSubstreams_;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          mptcpOptions_ = mptcpOptions_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.mptcpOptions_ = mptcpOptions_;
         onBuilt();
         return result;
       }
@@ -4185,6 +4284,16 @@ public final class MPTCPFlowMessageEnrichedPb {
         if (other.getNumOfAssociatedSubstreams() != 0) {
           setNumOfAssociatedSubstreams(other.getNumOfAssociatedSubstreams());
         }
+        if (!other.mptcpOptions_.isEmpty()) {
+          if (mptcpOptions_.isEmpty()) {
+            mptcpOptions_ = other.mptcpOptions_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureMptcpOptionsIsMutable();
+            mptcpOptions_.addAll(other.mptcpOptions_);
+          }
+          onChanged();
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -4213,6 +4322,7 @@ public final class MPTCPFlowMessageEnrichedPb {
         }
         return this;
       }
+      private int bitField0_;
 
       private int type_ = 0;
       /**
@@ -7428,6 +7538,116 @@ public final class MPTCPFlowMessageEnrichedPb {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.LazyStringList mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureMptcpOptionsIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          mptcpOptions_ = new com.google.protobuf.LazyStringArrayList(mptcpOptions_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @return A list containing the mptcpOptions.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getMptcpOptionsList() {
+        return mptcpOptions_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @return The count of mptcpOptions.
+       */
+      public int getMptcpOptionsCount() {
+        return mptcpOptions_.size();
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param index The index of the element to return.
+       * @return The mptcpOptions at the given index.
+       */
+      public java.lang.String getMptcpOptions(int index) {
+        return mptcpOptions_.get(index);
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the mptcpOptions at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getMptcpOptionsBytes(int index) {
+        return mptcpOptions_.getByteString(index);
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param index The index to set the value at.
+       * @param value The mptcpOptions to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMptcpOptions(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureMptcpOptionsIsMutable();
+        mptcpOptions_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param value The mptcpOptions to add.
+       * @return This builder for chaining.
+       */
+      public Builder addMptcpOptions(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureMptcpOptionsIsMutable();
+        mptcpOptions_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param values The mptcpOptions to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllMptcpOptions(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureMptcpOptionsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, mptcpOptions_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMptcpOptions() {
+        mptcpOptions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string mptcpOptions = 2003;</code>
+       * @param value The bytes of the mptcpOptions to add.
+       * @return This builder for chaining.
+       */
+      public Builder addMptcpOptionsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ensureMptcpOptionsIsMutable();
+        mptcpOptions_.add(value);
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7496,7 +7716,7 @@ public final class MPTCPFlowMessageEnrichedPb {
   static {
     java.lang.String[] descriptorData = {
       "\n\026proto/mptcp_flow.proto\022\023flowmessageenr" +
-      "iched\"\306\r\n\020MPTCPFlowMessage\022<\n\004Type\030\001 \001(\016" +
+      "iched\"\335\r\n\020MPTCPFlowMessage\022<\n\004Type\030\001 \001(\016" +
       "2..flowmessageenriched.MPTCPFlowMessage." +
       "FlowType\022\024\n\014TimeReceived\030\002 \001(\004\022\023\n\013Sequen" +
       "ceNum\030\004 \001(\r\022\024\n\014SamplingRate\030\003 \001(\004\022\025\n\rFlo" +
@@ -7536,11 +7756,12 @@ public final class MPTCPFlowMessageEnrichedPb {
       "\022\n\tDstIfDesc\030\357\007 \001(\t\022\023\n\nDstIfSpeed\030\360\007 \001(\r" +
       "\022\022\n\tProtoName\030\361\007 \001(\t\022\026\n\rRemoteCountry\030\362\007" +
       " \001(\t\022\024\n\013isMPTCPFlow\030\321\017 \001(\010\022\"\n\031numOfAssoc" +
-      "iatedSubstreams\030\322\017 \001(\r\"S\n\010FlowType\022\017\n\013FL" +
-      "OWUNKNOWN\020\000\022\013\n\007SFLOW_5\020\001\022\016\n\nNETFLOW_V5\020\002" +
-      "\022\016\n\nNETFLOW_V9\020\003\022\t\n\005IPFIX\020\004\"!\n\016Normalize" +
-      "dType\022\006\n\002No\020\000\022\007\n\003Yes\020\001B\'\n\tbwnetflowB\032MPT" +
-      "CPFlowMessageEnrichedPbb\006proto3"
+      "iatedSubstreams\030\322\017 \001(\r\022\025\n\014mptcpOptions\030\323" +
+      "\017 \003(\t\"S\n\010FlowType\022\017\n\013FLOWUNKNOWN\020\000\022\013\n\007SF" +
+      "LOW_5\020\001\022\016\n\nNETFLOW_V5\020\002\022\016\n\nNETFLOW_V9\020\003\022" +
+      "\t\n\005IPFIX\020\004\"!\n\016NormalizedType\022\006\n\002No\020\000\022\007\n\003" +
+      "Yes\020\001B\'\n\tbwnetflowB\032MPTCPFlowMessageEnri" +
+      "chedPbb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -7551,7 +7772,7 @@ public final class MPTCPFlowMessageEnrichedPb {
     internal_static_flowmessageenriched_MPTCPFlowMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_flowmessageenriched_MPTCPFlowMessage_descriptor,
-        new java.lang.String[] { "Type", "TimeReceived", "SequenceNum", "SamplingRate", "FlowDirection", "SamplerAddress", "TimeFlowStart", "TimeFlowEnd", "Bytes", "Packets", "SrcAddr", "DstAddr", "Etype", "Proto", "SrcPort", "DstPort", "InIf", "OutIf", "SrcMac", "DstMac", "SrcVlan", "DstVlan", "VlanId", "IngressVrfID", "EgressVrfID", "IPTos", "ForwardingStatus", "IPTTL", "TCPFlags", "IcmpType", "IcmpCode", "IPv6FlowLabel", "FragmentId", "FragmentOffset", "BiFlowDirection", "SrcAS", "DstAS", "NextHop", "NextHopAS", "SrcNet", "DstNet", "HasEncap", "SrcAddrEncap", "DstAddrEncap", "ProtoEncap", "EtypeEncap", "IPTosEncap", "IPTTLEncap", "IPv6FlowLabelEncap", "FragmentIdEncap", "FragmentOffsetEncap", "HasMPLS", "MPLSCount", "MPLS1TTL", "MPLS1Label", "MPLS2TTL", "MPLS2Label", "MPLS3TTL", "MPLS3Label", "MPLSLastTTL", "MPLSLastLabel", "HasPPP", "PPPAddressControl", "Cid", "CidString", "Normalized", "SrcIfName", "SrcIfDesc", "SrcIfSpeed", "DstIfName", "DstIfDesc", "DstIfSpeed", "ProtoName", "RemoteCountry", "IsMPTCPFlow", "NumOfAssociatedSubstreams", });
+        new java.lang.String[] { "Type", "TimeReceived", "SequenceNum", "SamplingRate", "FlowDirection", "SamplerAddress", "TimeFlowStart", "TimeFlowEnd", "Bytes", "Packets", "SrcAddr", "DstAddr", "Etype", "Proto", "SrcPort", "DstPort", "InIf", "OutIf", "SrcMac", "DstMac", "SrcVlan", "DstVlan", "VlanId", "IngressVrfID", "EgressVrfID", "IPTos", "ForwardingStatus", "IPTTL", "TCPFlags", "IcmpType", "IcmpCode", "IPv6FlowLabel", "FragmentId", "FragmentOffset", "BiFlowDirection", "SrcAS", "DstAS", "NextHop", "NextHopAS", "SrcNet", "DstNet", "HasEncap", "SrcAddrEncap", "DstAddrEncap", "ProtoEncap", "EtypeEncap", "IPTosEncap", "IPTTLEncap", "IPv6FlowLabelEncap", "FragmentIdEncap", "FragmentOffsetEncap", "HasMPLS", "MPLSCount", "MPLS1TTL", "MPLS1Label", "MPLS2TTL", "MPLS2Label", "MPLS3TTL", "MPLS3Label", "MPLSLastTTL", "MPLSLastLabel", "HasPPP", "PPPAddressControl", "Cid", "CidString", "Normalized", "SrcIfName", "SrcIfDesc", "SrcIfSpeed", "DstIfName", "DstIfDesc", "DstIfSpeed", "ProtoName", "RemoteCountry", "IsMPTCPFlow", "NumOfAssociatedSubstreams", "MptcpOptions", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
