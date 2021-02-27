@@ -1,6 +1,7 @@
 package bwnetflow.aggregator;
 
 import bwnetflow.messages.MPTCPFlowMessageEnrichedPb;
+import bwnetflow.messages.prettyprinter.MessagePrettyPrinter;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.processor.ProcessorSupplier;
@@ -35,7 +36,7 @@ public class DeduplicationProcessor implements Processor<String, MPTCPFlowMessag
             var iter = store.all();
             iter.forEachRemaining((msg) -> {
                 if (log) {
-                    System.out.println(msg.value.toString());
+                    MessagePrettyPrinter.prettyPrint(msg.value);
                 }
                 store.delete(msg.key);
                 context.forward(msg.key, msg.value);

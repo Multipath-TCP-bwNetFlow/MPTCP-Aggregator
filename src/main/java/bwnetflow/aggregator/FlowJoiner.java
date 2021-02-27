@@ -17,7 +17,6 @@ public class FlowJoiner {
             log.warn("Invalid case: flow message is NULL");
             return MPTCPFlowMessageEnrichedPb.MPTCPFlowMessage.newBuilder().build();
         } else {
-            System.out.println("JOINED");
             return buildJoined(flowMessage, mptcpMessage);
         }
     }
@@ -38,6 +37,8 @@ public class FlowJoiner {
                 .setDstAddr(other.getDstAddr())
                 .setEtype(other.getEtype())
                 .setProto(other.getProto())
+                .setProtoName(other.getProtoName())
+                .setProtoNameBytes(other.getProtoNameBytes())
                 .setSrcPort(other.getSrcPort())
                 .setDstPort(other.getDstPort())
                 .setInIf(other.getInIf())

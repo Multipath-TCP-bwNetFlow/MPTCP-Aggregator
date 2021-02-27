@@ -2,6 +2,7 @@ package bwnetflow.aggregator;
 
 import bwnetflow.messages.FlowMessageEnrichedPb;
 import bwnetflow.messages.MPTCPMessageProto;
+import bwnetflow.messages.prettyprinter.MessagePrettyPrinter;
 import bwnetflow.serdes.SerdeFactories;
 import bwnetflow.topology.StreamNode;
 import com.google.protobuf.ByteString;
@@ -73,10 +74,10 @@ public class Aggregator implements StreamNode {
     // seq num is not what was expected, we look at FLOWS. It is more like a flow counter which is incremented with each sended flow
     // remove seq num in keyBuilderFlow
     //  work with ports instead
+
     private String keyBuilderFlow(FlowMessageEnrichedPb.FlowMessage flowMessage) {
         if (logFlows) {
-            System.out.println("Flow Time:");
-            System.out.println(flowMessage.getTimeReceived());
+            MessagePrettyPrinter.prettyPrint(flowMessage);
         }
         String sourceAddr = "N/A";
         String destAddr = "N/A";
@@ -86,21 +87,21 @@ public class Aggregator implements StreamNode {
         } catch (UnknownHostException e) {
             log.warn("Could not convert read ip address", e);
         }
-      //  int seqNum = flowMessage.getSequenceNum();
-      //  return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
-        return String.format("%s:%s", sourceAddr, destAddr);
+        String srcPort = Integer.toString(flowMessage.getSrcPort());
+        String dstPort = Integer.toString(flowMessage.getDstPort());
+        return String.format("%s:%s;%s:%s", sourceAddr, destAddr, srcPort, dstPort);
     }
 
     private String keyBuilderMPTCP(MPTCPMessageProto.MPTCPMessage mptcpMessage) {
         if (logMPTCP) {
-            System.out.println("MPTCP Time:");
-            System.out.println(mptcpMessage.getTimestampCaptured());
+            MessagePrettyPrinter.prettyPrint(mptcpMessage);
         }
         String sourceAddr = mptcpMessage.getSrcAddr();
         String destAddr = mptcpMessage.getDstAddr();
-       // int seqNum = mptcpMessage.getSeqNum();
-       // return String.format("%s:%s;seq=%d", sourceAddr, destAddr, seqNum);
-        return String.format("%s:%s", sourceAddr, destAddr);
+        String srcPort = Integer.toString(mptcpMessage.getSrcPort());
+        String dstPort = Integer.toString(mptcpMessage.getDstPort());
+
+        return String.format("%s:%s;%s:%s", sourceAddr, destAddr, srcPort, dstPort);
     }
 
     private boolean isInWhitelist(String src, String dst) {
@@ -109,6 +110,13 @@ public class Aggregator implements StreamNode {
     }
 
     private boolean isInWhitelist(ByteString src, ByteString dst) {
-        return isInWhitelist(src.toString(), dst.toString());
+        try {
+            String sourceAddr = InetAddress.getByAddress(src.toByteArray()).toString().substring(1);
+            String destAddr = InetAddress.getByAddress(dst.toByteArray()).toString().substring(1);
+            return isInWhitelist(sourceAddr, destAddr);
+        } catch (UnknownHostException e) {
+            log.warn("Could not convert read ip address", e);
+            return false;
+        }
     }
 }

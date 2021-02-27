@@ -14,4 +14,5 @@ ENTRYPOINT java -jar mptcp_aggregator.jar -f ${BWNETFLOW_INPUT_TOPIC} \
     -w ${JOIN_WINDOW_TIME} \
     -lm ${LOG_MPTCP} \
     -lf ${LOG_FLOW} \
-    -lj ${LOG_JOINED}
+    -lj ${LOG_JOINED} \
+    -a ${ADDRESS_WHITELIST}
